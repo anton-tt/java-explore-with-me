@@ -1,12 +1,12 @@
 package ru.practicum.mainservice.event.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import ru.practicum.mainservice.category.model.Category;
-import ru.practicum.mainservice.event.states.State;
+import ru.practicum.mainservice.event.states.EventState;
 import ru.practicum.mainservice.location.model.Location;
 import ru.practicum.mainservice.user.model.User;
 import javax.persistence.*;
-import javax.validation.constraints.Future;
 import java.time.LocalDateTime;
 
 @Getter
@@ -32,9 +32,9 @@ public class Event {
     @Column(name = "description", nullable = false, length = 7000)
     private String description;
 
-    @Column(name = "state", nullable = false, length = 50)
+    @Column(name = "state", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
-    private State state;
+    private EventState state;
 
     @Column(name = "is_paid", nullable = false)
     private Boolean paid;
@@ -50,20 +50,23 @@ public class Event {
     private Location location;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "initiator_id", nullable = false)
     @ToString.Exclude
     private User initiator;
 
     @Column(name = "created_date", nullable = false)
-    @Future
+    //@FutureOrPresent
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdOn;
 
     @Column(name = "published_date")
-    @Future
+    //@Future
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime publishedOn;
 
     @Column(name = "event_date", nullable = false)
-    @Future
+    //@Future
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
 
     @Column(name = "limit", nullable = false)

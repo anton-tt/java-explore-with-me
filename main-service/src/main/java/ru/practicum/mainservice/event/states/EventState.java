@@ -1,6 +1,6 @@
 package ru.practicum.mainservice.event.states;
 
-public enum State {
+public enum EventState {
 
     PENDING,
     PUBLISHED,

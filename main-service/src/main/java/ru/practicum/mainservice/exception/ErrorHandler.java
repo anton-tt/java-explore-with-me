@@ -16,6 +16,14 @@ public class ErrorHandler {
         log.info("Ошибка 400: {}", e.getMessage());
         return new ErrorResponse(e.getMessage());
     }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleDataConflictException(final DataConflictException e) {
+        log.info("Ошибка 409: {}", e.getMessage());
+        return new ErrorResponse(e.getMessage());
+    }
+
 /*
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -36,14 +44,13 @@ public class ErrorHandler {
     public ErrorResponse constraint(ConstraintViolationException e) {
         log.info("Ошибка 409: {}", e.getMessage());
         return new ErrorResponse(e.getMessage());
-    }
+    }*/
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleThrowable(final Throwable e) {
         log.info("Ошибка 500: {}", e.getMessage());
         return new ErrorResponse("Произошла непредвиденная ошибка.");
-    }*/
-
+    }
 
 }

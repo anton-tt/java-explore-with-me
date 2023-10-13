@@ -1,0 +1,45 @@
+package ru.practicum.mainservice.request.controller;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+import ru.practicum.mainservice.request.dto.ResponseRequestDto;
+import ru.practicum.mainservice.request.service.RequestService;
+import java.util.List;
+
+@RestController
+@RequestMapping(path = "/users/{userId}/requests")
+@RequiredArgsConstructor
+@Validated
+@Slf4j
+public class PrivateRequestsController {
+
+    private final RequestService requestService;
+
+    @PostMapping
+    public ResponseRequestDto createRequest(@PathVariable Long userId,
+                                            @RequestParam Long eventId) {
+        log.info("");
+        log.info("Добавление нового запроса на участие в событии с id = {} от пользователя с id = {}", userId, eventId);
+        return requestService.create(userId, eventId);
+    }
+
+    @GetMapping
+    public List<ResponseRequestDto> getRequestsOneRequester(@PathVariable Long requesterId,
+                                                            @RequestParam(defaultValue = "0") Integer from,
+                                                            @RequestParam(defaultValue = "10") Integer size) {
+        log.info("");
+        log.info("Поиск всех запросов на участие в событиях, оформленных пользователем с id = {}", requesterId);
+        return requestService.getAllOneRequester(requesterId, from, size);
+    }
+
+    @PatchMapping("/{requestId}/cancel")
+    public ResponseRequestDto cancelRequest(@PathVariable Long userId,
+                                        @PathVariable Long requestId) {
+        log.info("");
+        log.info("Отмена запроса, с id = {} на участие в событии, пользователем с id = {}", requestId, userId);
+        return requestService.cancelRequest(userId, requestId);
+    }
+
+}

@@ -5,8 +5,9 @@ import ru.practicum.mainservice.category.dto.ResponseCategoryDto;
 import ru.practicum.mainservice.category.model.Category;
 import ru.practicum.mainservice.event.dto.RequestEventDto;
 import ru.practicum.mainservice.event.dto.ResponseEventDto;
+import ru.practicum.mainservice.event.dto.ShortResponseEventDto;
 import ru.practicum.mainservice.event.model.Event;
-import ru.practicum.mainservice.event.states.State;
+import ru.practicum.mainservice.event.states.EventState;
 import ru.practicum.mainservice.location.dto.ResponseLocationDto;
 import ru.practicum.mainservice.location.model.Location;
 import ru.practicum.mainservice.user.dto.ShortResponseUserDto;
@@ -22,7 +23,7 @@ public class EventMapper {
                 .title(eventDto.getTitle())
                 .annotation(eventDto.getAnnotation())
                 .description(eventDto.getDescription())
-                .state(State.PENDING)
+                .state(EventState.PENDING)
                 .paid(eventDto.getPaid())
                 .category(category)
                 .location(location)
@@ -39,6 +40,7 @@ public class EventMapper {
     public ResponseEventDto toResponseEventDto(Event event, ResponseCategoryDto categoryDto,
                                                ResponseLocationDto locationDto, ShortResponseUserDto initiatorDto) {
         return ResponseEventDto.builder()
+                .id(event.getId())
                 .title(event.getTitle())
                 .annotation(event.getAnnotation())
                 .description(event.getDescription())
@@ -53,6 +55,21 @@ public class EventMapper {
                 .participantLimit(event.getParticipantLimit())
                 .confirmedRequests(event.getConfirmedRequests())
                 .requestModeration(event.getRequestModeration())
+                .views(event.getViews())
+                .build();
+    }
+
+    public ShortResponseEventDto toShortResponseEventDto(Event event, ResponseCategoryDto categoryDto,
+                                                    ShortResponseUserDto initiatorDto) {
+        return ShortResponseEventDto.builder()
+                .id(event.getId())
+                .title(event.getTitle())
+                .annotation(event.getAnnotation())
+                .paid(event.getPaid())
+                .category(categoryDto)
+                .initiator(initiatorDto)
+                .eventDate(event.getEventDate())
+                .confirmedRequests(event.getConfirmedRequests())
                 .views(event.getViews())
                 .build();
     }

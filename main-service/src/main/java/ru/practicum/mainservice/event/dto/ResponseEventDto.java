@@ -3,7 +3,7 @@ package ru.practicum.mainservice.event.dto;
 import lombok.Builder;
 import lombok.Data;
 import ru.practicum.mainservice.category.dto.ResponseCategoryDto;
-import ru.practicum.mainservice.event.states.State;
+import ru.practicum.mainservice.event.states.EventState;
 import ru.practicum.mainservice.location.dto.ResponseLocationDto;
 import ru.practicum.mainservice.user.dto.ShortResponseUserDto;
 import java.time.LocalDateTime;
@@ -16,7 +16,7 @@ public class ResponseEventDto {
     private String title;
     private String annotation;
     private String description;
-    private State state;
+    private EventState state;
     private Boolean paid;
     private ResponseCategoryDto category;
     private ResponseLocationDto location;
