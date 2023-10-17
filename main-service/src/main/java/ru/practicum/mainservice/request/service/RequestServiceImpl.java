@@ -45,6 +45,7 @@ public class RequestServiceImpl implements RequestService {
         return eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException(String.format("Событие " +
                 "с id = %s отсутствует в БД. Выполнить операцию невозможно!", eventId)));
     }
+
     @Override
     public ResponseRequestDto create(Long requesterId, Long eventId) {
         User requester = getUserById(requesterId);

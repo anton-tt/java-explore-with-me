@@ -459,7 +459,7 @@ public class EventServiceImpl implements EventService {
         }
 
         String annotation = eventDto.getAnnotation();
-        if (annotation!= null && !annotation.isBlank()) {
+        if (annotation != null && !annotation.isBlank()) {
             initialEvent.setAnnotation(annotation);
         }
 

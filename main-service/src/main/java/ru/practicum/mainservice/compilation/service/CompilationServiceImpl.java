@@ -177,7 +177,7 @@ public class CompilationServiceImpl implements CompilationService {
         if (!categoryRepository.existsById(id)) {
             throw new NotFoundException(String.format("Подборка с id = %s отсутствует в БД. " +
                     "Выполнить операцию невозможно!", id));
-        };
+        }
     }
 
 }
