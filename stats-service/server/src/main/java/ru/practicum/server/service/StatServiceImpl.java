@@ -47,8 +47,7 @@ public class StatServiceImpl implements StatService {
         List<ViewStatsDto> viewStatsListDto;
         if (viewStatsList == null) {
             viewStatsListDto = new ArrayList<>();
-        }
-        else {
+        } else {
             viewStatsListDto = viewStatsList
                     .stream()
                     .map(StatMapper::toViewStatsDto)
