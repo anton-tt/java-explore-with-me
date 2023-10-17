@@ -23,9 +23,10 @@ public class RequestMapper {
     public ResponseRequestDto toResponseRequestDto(Request request) {
         return ResponseRequestDto.builder()
                 .id(request.getId())
-                .created(request.getCreated())
-                .requesterId(request.getRequester().getId())
-                .eventId(request.getEvent().getId())
+                .created(request.getCreated().toString())
+                .requester(request.getRequester().getId())
+                .event(request.getEvent().getId())
+                .status(request.getStatus().toString())
                 .build();
     }
 

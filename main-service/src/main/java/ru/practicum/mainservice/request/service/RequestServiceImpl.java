@@ -41,9 +41,9 @@ public class RequestServiceImpl implements RequestService {
                 "с id = %s отсутствует в БД. Выполнить операцию невозможно!", id)));
     }
 
-    private Event getEventById(long id) {
-        return eventRepository.findById(id).orElseThrow(() -> new NotFoundException(String.format("Событие " +
-                "с id = %s отсутствует в БД. Выполнить операцию невозможно!", id)));
+    private Event getEventById(long eventId) {
+        return eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException(String.format("Событие " +
+                "с id = %s отсутствует в БД. Выполнить операцию невозможно!", eventId)));
     }
     @Override
     public ResponseRequestDto create(Long requesterId, Long eventId) {
@@ -54,15 +54,16 @@ public class RequestServiceImpl implements RequestService {
         isNotInitiatorRequester(event.getInitiator().getId(), requesterId);
         isEventPublished(event.getState());
         isNotExceededLimitRequests(event.getParticipantLimit(), event.getConfirmedRequests());
-        //isNotExceededLimitRequests(event.getParticipantLimit(), eventId);
 
-        RequestStatus requestStatus = generateRequestStatus(event.getRequestModeration());
-        if (!event.getRequestModeration()) {
+        RequestStatus requestStatus = generateRequestStatus(event.isRequestModeration());
+        if (!event.isRequestModeration() || (event.getParticipantLimit() == 0)) {
             requestStatus = RequestStatus.CONFIRMED;
         }
         LocalDateTime currentMoment = LocalDateTime.now();
         Request requestData = RequestMapper.toRequest(requester, event, currentMoment, requestStatus);
+        System.out.println("requestData " + requestData);
         Request request = requestRepository.save(requestData);
+        System.out.println("request " + request);
 
         if (requestStatus.equals(RequestStatus.CONFIRMED)) {
             int confirmedRequests = event.getConfirmedRequests() + 1;
@@ -72,13 +73,14 @@ public class RequestServiceImpl implements RequestService {
         log.info("Данные запроса на участие в событии добавлены в БД: {}.", request);
 
         ResponseRequestDto requestDto = RequestMapper.toResponseRequestDto(request);
+        System.out.println("requestDto " + requestDto);
         log.info("Запрос на участие в событии создан: {}.", requestDto);
         return requestDto;
     }
 
     @Override
     public List<ResponseRequestDto> getAllOneRequester(Long requesterId, Integer from, Integer size) {
-        isExistsUser(requesterId);
+        User requester = getUserById(requesterId);
         List<ResponseRequestDto> requestDtoList;
         Pageable pageable = PageRequest.of(from / size, size);
         List<Request> requestsOneRequester = requestRepository.findAllByRequesterId(requesterId, pageable);
@@ -147,17 +149,6 @@ public class RequestServiceImpl implements RequestService {
         }
     }
 
-    /*private void isNotExceededLimitRequests(Integer participantLimit, Long eventId) {
-        if (participantLimit != 0) {
-            int currentNumberRequests = requestRepository.countByEventIdAndRequestStatus(eventId,
-                    RequestStatus.CONFIRMED);
-            if (currentNumberRequests >= participantLimit) {
-                throw new DataConflictException("В событии, на участие в котором отправлен запрос, " +
-                        "превышен лимит участников. Выполнить операцию невозможно!");
-            }
-        }
-    }*/
-
     private RequestStatus generateRequestStatus(Boolean requestModeration) {
         if (requestModeration) {
             return RequestStatus.PENDING;
@@ -174,7 +165,7 @@ public class RequestServiceImpl implements RequestService {
     }
 
     private void isRequester(Long userId, Long requesterId) {
-        if (requesterId.equals(userId)) {
+        if (!requesterId.equals(userId)) {
             throw new DataConflictException("Пользователь, отправивший запрос на отмену участия в событии, " +
                     "не создавал этот запрос. Выполнить операцию невозможно!");
         }

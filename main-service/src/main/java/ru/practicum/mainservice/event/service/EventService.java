@@ -7,7 +7,6 @@ import ru.practicum.mainservice.event.dto.UpdateRequestEventDto;
 import ru.practicum.mainservice.event.requestListDto.InitialRequestListDto;
 import ru.practicum.mainservice.event.requestListDto.ResultRequestListDto;
 import ru.practicum.mainservice.request.dto.ResponseRequestDto;
-import ru.practicum.mainservice.user.model.User;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,13 +15,13 @@ public interface EventService {
 
     ResponseEventDto create(Long userId, RequestEventDto eventDto);
 
-    ResponseEventDto getById(Long id);
+    ResponseEventDto getById(Long id, HttpServletRequest requestData);
 
     ResponseEventDto getByIdByInitiator(Long userId, Long id);
 
     List<ShortResponseEventDto> getEventsOneInitiator(Long userId, Integer from, Integer size);
 
-    List<ResponseEventDto> getFullEvents(List<User> users, List<String> states, List<Long> categories,
+    List<ResponseEventDto> getFullEvents(List<Long> users, List<String> states, List<Long> categories,
                                          LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size);
 
     List<ShortResponseEventDto> getPublishedEvents(String text, List<Long> categories, Boolean paid,

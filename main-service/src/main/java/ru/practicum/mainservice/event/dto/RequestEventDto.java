@@ -1,5 +1,6 @@
 package ru.practicum.mainservice.event.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,25 +30,22 @@ public class RequestEventDto {
             "от 20 до 7000 символов.")
     private String description;
 
-    @NotNull(message = "Не определена доступность события: необходима ли оплата.")
-    private  Boolean paid;
+    private  Boolean paid = false;
 
-    @NotNull(message = "Отсутствует категория события.")
     @PositiveOrZero
-    private Long categoryId;
+    private Long category;
 
     @NotNull(message = "Отсутствует место проведения события.")
     private RequestLocationDto location;
 
     @NotNull(message = "Отсутствует дата события.")
     @Future(message = "Время проведения события должно быть в будущем.")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
 
-    @NotNull(message = "Не задано макимальное количество участников события.")
     @PositiveOrZero
-    private Integer participantLimit;
+    private Integer participantLimit = 0;
 
-    @NotNull(message = "Не определено состояние премодерации запроса на участие в событии.")
-    private Boolean requestModeration;
+    private Boolean requestModeration = true;
 
 }

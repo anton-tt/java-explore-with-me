@@ -8,13 +8,12 @@ import java.util.List;
 
 public interface RequestRepository  extends JpaRepository<Request, Long> {
 
-    Integer countByEventIdAndRequestStatus(Long eventId, RequestStatus status);
 
     Boolean existsByEventIdAndRequesterId(Long eventId, Long requesterId);
 
     List<Request> findAllByRequesterId(Long requesterId, Pageable pageable);
 
-    List<Request> findAllByIdInAndStatusPendingOrderByCreatedAsc(List<Long> requestIds);
+    List<Request> findAllByIdInAndStatusOrderByCreatedAsc(List<Long> requestIds, RequestStatus status);
 
     List<Request> findAllByEventId(Long eventId);
 

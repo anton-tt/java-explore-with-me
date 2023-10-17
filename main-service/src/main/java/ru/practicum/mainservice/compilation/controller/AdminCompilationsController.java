@@ -2,6 +2,7 @@ package ru.practicum.mainservice.compilation.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.mainservice.compilation.dto.RequestCompilationDto;
@@ -20,9 +21,10 @@ public class AdminCompilationsController {
     private final CompilationService compilationService;
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public ResponseCompilationDto createCompilation(@RequestBody @Valid RequestCompilationDto compilationDto) {
         log.info("");
-        log.info("Добавление новой категории: {}", compilationDto);
+        log.info("Добавление новой побборки событий: {}", compilationDto);
         return compilationService.create(compilationDto);
     }
 
@@ -35,6 +37,7 @@ public class AdminCompilationsController {
     }
 
     @DeleteMapping("/{compId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCategory(@PathVariable Long compId) {
         log.info("");
         log.info("Удаление всех данных подборки событий c id = {}", compId);

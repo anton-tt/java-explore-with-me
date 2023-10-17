@@ -1,4 +1,4 @@
-package ru.practicum.mainservice.exception;
+package ru.practicum.server.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -8,6 +8,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
 import java.time.LocalDateTime;
 
 @RestControllerAdvice
@@ -69,5 +70,12 @@ public class ErrorHandler {
         return ErrorMapper.toErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.toString(), "An unexpected error occurred.",
                 e.getMessage(), LocalDateTime.now());
     }
+
+   /* @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse constraint(ConstraintViolationException e) {
+        log.info("Ошибка 409: {}", e.getMessage());
+        return new ErrorResponse(e.getMessage());
+    }*/
 
 }

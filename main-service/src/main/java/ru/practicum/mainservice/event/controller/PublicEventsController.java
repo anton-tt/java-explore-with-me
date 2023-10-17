@@ -22,15 +22,18 @@ public class PublicEventsController {
 
     private final EventService eventService;
 
-    @GetMapping("/{id}")
-    public ResponseEventDto getById(@PathVariable Long eventId) {
+    @GetMapping("/{eventId}")
+    public ResponseEventDto getById(@PathVariable Long eventId,
+                                    HttpServletRequest requestData) {
         log.info("");
         log.info("Получение данных события с id = {}", eventId);
-        return eventService.getById(eventId);
+        return eventService.getById(eventId, requestData);
     }
 
     @GetMapping
-    public List<ShortResponseEventDto> getPublishedEvents(@RequestParam(required = false) String text,
+    public List<ShortResponseEventDto> getPublishedEvents(@RequestParam(defaultValue = "0") @Min(0) Integer from,
+                                                          @RequestParam(defaultValue = "10") @Min(1) Integer size,
+                                                          @RequestParam(required = false) String text,
                                                           @RequestParam(required = false) List<Long> categories,
                                                           @RequestParam(required = false) Boolean paid,
                                                           @RequestParam(required = false)
@@ -41,8 +44,6 @@ public class PublicEventsController {
                                                               LocalDateTime rangeEnd,
                                                           @RequestParam(required = false) Boolean onlyAvailable,
                                                           @RequestParam(required = false) String sort,
-                                                          @RequestParam(defaultValue = "0") @Min(0) Integer from,
-                                                          @RequestParam(defaultValue = "10") @Min(1) Integer size,
                                                           HttpServletRequest requestData) {
         log.info("");
         log.info("Поиск опубликованных событий по запросу пользователя");

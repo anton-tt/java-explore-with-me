@@ -2,6 +2,7 @@ package ru.practicum.mainservice.event.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.mainservice.event.dto.RequestEventDto;
@@ -13,7 +14,6 @@ import ru.practicum.mainservice.event.requestListDto.ResultRequestListDto;
 import ru.practicum.mainservice.event.service.EventService;
 import ru.practicum.mainservice.request.dto.ResponseRequestDto;
 import javax.validation.Valid;
-import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
@@ -26,6 +26,7 @@ public class PrivateEventsController {
     private final EventService eventService;
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public ResponseEventDto createEvent(@PathVariable Long userId,
                                         @RequestBody @Valid RequestEventDto eventDto) {
         log.info("");
@@ -43,8 +44,10 @@ public class PrivateEventsController {
 
     @GetMapping
     public List<ShortResponseEventDto> getEventsOneInitiator(@PathVariable Long userId,
-                                                             @RequestParam(defaultValue = "0") @Min(0) Integer from,
-                                                             @RequestParam(defaultValue = "10") @Min(1) Integer size) {
+                                                             @RequestParam(required = false, defaultValue = "0")
+                                                                 Integer from,
+                                                             @RequestParam(required = false, defaultValue = "10")
+                                                                 Integer size) {
         log.info("");
         log.info("Поиск всех событий, созданных пользователем с id = {}", userId);
         return eventService.getEventsOneInitiator(userId, from, size);
@@ -55,7 +58,7 @@ public class PrivateEventsController {
                                                @PathVariable Long eventId,
                                                @RequestBody @Valid UpdateRequestEventDto eventDto) {
         log.info("");
-        log.info("Обновление в режиме private данных события с id = {}: {}", eventId, eventDto);
+        log.info("Обновление данных события с id = {} в режиме private: {}", eventId, eventDto);
         return eventService.privateUpdate(userId, eventId, eventDto);
     }
 

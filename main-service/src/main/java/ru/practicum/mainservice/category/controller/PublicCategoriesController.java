@@ -29,7 +29,7 @@ public class PublicCategoriesController {
     public List<ResponseCategoryDto> getAllCategories(@RequestParam(defaultValue = "0") @Min(0) Integer from,
                                                       @RequestParam(defaultValue = "10") @Min(1) Integer size) {
         log.info("");
-        log.info("Поиск категорий по заданным фильтрам");
+        log.info("Поиск категорий по заданным параметрам");
         return categoryService.getAll(from, size);
     }
 

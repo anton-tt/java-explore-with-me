@@ -1,5 +1,6 @@
 package ru.practicum.mainservice.event.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,11 +33,12 @@ public class UpdateRequestEventDto {
     private  Boolean paid;
 
     @PositiveOrZero
-    private Long categoryId;
+    private Long category;
 
     private RequestLocationDto location;
 
     @Future(message = "Время проведения события должно быть в будущем.")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
 
     @PositiveOrZero

@@ -22,6 +22,7 @@ public class CompilationMapper {
     public ResponseCompilationDto toResponseCompilationDto(Compilation compilation,
                                                            List<ShortResponseEventDto> eventDtoList) {
         return ResponseCompilationDto.builder()
+                .id(compilation.getId())
                 .title(compilation.getTitle())
                 .pinned(compilation.getPinned())
                 .events(eventDtoList)

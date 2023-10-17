@@ -47,9 +47,9 @@ public class UserServiceImpl implements UserService {
                     .stream()
                     .map(UserMapper::toResponseUserDto)
                     .collect(Collectors.toList());
-            log.info("Сформирован список пользователей в количестве {} в соответствии с поставленным запросом.",
-                    userDtoList.size());
         }
+        log.info("Сформирован список пользователей в количестве {} в соответствии с поставленным запросом.",
+                userDtoList.size());
         return userDtoList;
     }
 

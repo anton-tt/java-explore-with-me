@@ -8,9 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.mainservice.event.dto.ResponseEventDto;
 import ru.practicum.mainservice.event.dto.UpdateRequestEventDto;
 import ru.practicum.mainservice.event.service.EventService;
-import ru.practicum.mainservice.user.model.User;
 import javax.validation.Valid;
-import javax.validation.constraints.Min;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -24,17 +22,17 @@ public class AdminEventsController {
     private final EventService eventService;
 
     @GetMapping
-    public List<ResponseEventDto> getFullEvents(@RequestParam(required = false) List<User> users,
+    public List<ResponseEventDto> getFullEvents(@RequestParam(required = false) List<Long> users,
                                                 @RequestParam(required = false) List<String> states,
                                                 @RequestParam(required = false) List<Long> categories,
                                                 @RequestParam(required = false)
                                                 @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
                                                 @RequestParam(required = false)
                                                 @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
-                                                @RequestParam(defaultValue = "0") @Min(0) Integer from,
-                                                @RequestParam(defaultValue = "10") @Min(1) Integer size) {
+                                                @RequestParam(required = false, defaultValue = "0") Integer from,
+                                                @RequestParam(required = false, defaultValue = "10") Integer size) {
         log.info("");
-        log.info("Поиск полной информации о событиях по запросу администратора");
+        log.info("Поиск полной информации о событиях в режиме admin");
         return eventService.getFullEvents(users, states, categories, rangeStart, rangeEnd, from, size);
     }
 

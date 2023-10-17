@@ -43,7 +43,7 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = getCategoryById(catId);
         log.info("Данные категории найдены в БД: {}.", category);
         ResponseCategoryDto responseCategoryDto = CategoryMapper.toResponseCategoryDto(category);
-        log.info("Категория найдена: {}.", responseCategoryDto);
+        log.info("Запрашиваемая атегория найдена: {}.", responseCategoryDto);
         return responseCategoryDto;
     }
 
@@ -51,15 +51,16 @@ public class CategoryServiceImpl implements CategoryService {
     public List<ResponseCategoryDto> getAll(Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from / size, size);
         List<Category> categoryList = categoryRepository.findAll(pageable).getContent();
-
+        log.info("Данные категорий найдены в БД.");
         List<ResponseCategoryDto> categoryDtoList = new ArrayList<>();
         if (!categoryList.isEmpty()) {
             categoryDtoList = categoryList
                     .stream()
                     .map(CategoryMapper::toResponseCategoryDto)
                     .collect(Collectors.toList());
-            log.info("Сформирован список имеющихся категорий в соответствии с поставленным запросом.");
         }
+        log.info("Сформирован список имеющихся категорий в соответствии с поставленным запросом в количестве {}.",
+                categoryDtoList.size());
         return categoryDtoList;
     }
 

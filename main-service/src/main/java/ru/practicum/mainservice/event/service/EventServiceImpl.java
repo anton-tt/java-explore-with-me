@@ -6,7 +6,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import ru.practicum.client.StatClient;
+import ru.practicum.clie.StatClient;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.mainservice.category.dto.ResponseCategoryDto;
 import ru.practicum.mainservice.category.mapper.CategoryMapper;
@@ -42,7 +42,6 @@ import ru.practicum.mainservice.user.model.User;
 import ru.practicum.mainservice.user.repository.UserRepository;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -70,22 +69,21 @@ public class EventServiceImpl implements EventService {
     }
 
     private Category getCategoryById(long id) {
-        return categoryRepository.findById(id).orElseThrow(() -> new NotFoundException(String.format("Пользователь " +
+        return categoryRepository.findById(id).orElseThrow(() -> new NotFoundException(String.format("Категория " +
                 "с id = %s отсутствует в БД. Выполнить операцию невозможно!", id)));
     }
-
-    /*private Request getRequestById(long id) {
-        return requestRepository.findById(id).orElseThrow(() -> new NotFoundException(String.format("Запрос " +
-                "с id = %s отсутствует в БД. Выполнить операцию невозможно!", id)));
-    }*/
 
     @Override
     public ResponseEventDto create(Long userId, RequestEventDto eventDto) {
         User initiator = getUserById(userId);
-        Category category = getCategoryById(eventDto.getCategoryId());
+        ShortResponseUserDto initiatorDto = UserMapper.toShortResponseUserDto(initiator);
+
+        Category category = getCategoryById(eventDto.getCategory());
+        ResponseCategoryDto categoryDto = CategoryMapper.toResponseCategoryDto(category);
 
         Location locationData = LocationMapper.toLocation(eventDto.getLocation());
         Location location = locationRepository.save(locationData);
+        ResponseLocationDto locationDto = LocationMapper.toResponseLocationDto(location);
 
         LocalDateTime currentMoment = LocalDateTime.now();
         LocalDateTime eventDate = eventDto.getEventDate();
@@ -95,20 +93,16 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.save(eventData);
         log.info("Данные события добавлены в БД: {}.", event);
 
-        ResponseCategoryDto categoryDto = CategoryMapper.toResponseCategoryDto(category);
-        ResponseLocationDto locationDto = LocationMapper.toResponseLocationDto(location);
-        ShortResponseUserDto initiatorDto = UserMapper.toShortResponseUserDto(initiator);
-
         ResponseEventDto responseEventDto = EventMapper.toResponseEventDto(event, categoryDto, locationDto, initiatorDto);
         log.info("Новое событие создано: {}.", responseEventDto);
         return responseEventDto;
     }
 
     @Override
-    public ResponseEventDto getById(Long id) {
+    public ResponseEventDto getById(Long id, HttpServletRequest requestData) {
         Event event = getEventById(id);
+        isStatePublished(event.getState());
         log.info("Данные события получены из БД: {}.", event);
-
         addViews(List.of(event));
 
         ResponseCategoryDto categoryDto = CategoryMapper.toResponseCategoryDto(event.getCategory());
@@ -116,7 +110,8 @@ public class EventServiceImpl implements EventService {
         ShortResponseUserDto initiatorDto = UserMapper.toShortResponseUserDto(event.getInitiator());
 
         ResponseEventDto responseEventDto = EventMapper.toResponseEventDto(event, categoryDto, locationDto, initiatorDto);
-        log.info("Новое событие создано: {}.", responseEventDto);
+        log.info("Событие получено: {}.", responseEventDto);
+        saveHitStatistic(requestData);
         return responseEventDto;
     }
 
@@ -126,7 +121,6 @@ public class EventServiceImpl implements EventService {
         Event event = getEventById(id);
         isInitiatorUser(event.getInitiator().getId(), userId);
         log.info("Данные события получены из БД: {}.", event);
-
         addViews(List.of(event));
 
         ResponseCategoryDto categoryDto = CategoryMapper.toResponseCategoryDto(event.getCategory());
@@ -161,8 +155,8 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<ResponseEventDto> getFullEvents(List<User> users, List<String> states, List<Long> categories,
-    LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size) {
+    public List<ResponseEventDto> getFullEvents(List<Long> users, List<String> states, List<Long> categories,
+            LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size) {
         isStartBeforeEnd(rangeStart, rangeEnd);
         Specification<Event> specification = Specification.where(null);
         if (users != null && !users.isEmpty()) {
@@ -189,9 +183,10 @@ public class EventServiceImpl implements EventService {
             specification = specification.and((root, query, criteriaBuilder) ->
                     criteriaBuilder.lessThanOrEqualTo(root.get("eventDate"), rangeEnd));
         }
+
+        List<ResponseEventDto> eventDtoList;
         Pageable pageable = PageRequest.of(from / size, size);
         List<Event> events = eventRepository.findAll(specification, pageable);
-        List<ResponseEventDto> eventDtoList;
 
         if (events == null) {
             eventDtoList = new ArrayList<>();
@@ -213,10 +208,10 @@ public class EventServiceImpl implements EventService {
                                                           LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                                           Boolean onlyAvailable, String sort, Integer from,
                                                           Integer size, HttpServletRequest requestData) {
-        isStartBeforeEnd(rangeStart, rangeEnd);
-        saveHitStatistic(requestData);
 
+        isStartBeforeEnd(rangeStart, rangeEnd);
         Specification<Event> specification = Specification.where(null);
+
         if (text != null) {
             specification = specification.and((root, query, criteriaBuilder) ->
                     criteriaBuilder.or(
@@ -226,18 +221,18 @@ public class EventServiceImpl implements EventService {
                                     "%" + text.toLowerCase() + "%")
                     ));
 
-            if (categories != null && !categories.isEmpty()) {
-                specification = specification.and((root, query, criteriaBuilder) ->
-                        root.get("category").get("id").in(categories));
-            }
-
-            if (rangeStart == null) {
-                rangeStart = LocalDateTime.now();
-            }
-            LocalDateTime finalRangeStart = rangeStart;
+        if (categories != null && !categories.isEmpty()) {
             specification = specification.and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"), finalRangeStart));
-            }
+                    root.get("category").get("id").in(categories));
+        }
+
+        if (rangeStart == null) {
+            rangeStart = LocalDateTime.now();
+        }
+        LocalDateTime finalRangeStart = rangeStart;
+        specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"), finalRangeStart));
+        }
 
         if (rangeEnd != null) {
             specification = specification.and((root, query, criteriaBuilder) ->
@@ -252,9 +247,10 @@ public class EventServiceImpl implements EventService {
         specification = specification.and((root, query, criteriaBuilder) ->
                         criteriaBuilder.equal(root.get("state"), EventState.PUBLISHED));
 
+        List<ShortResponseEventDto> eventDtoList;
         Pageable pageable = PageRequest.of(from / size, size);
         List<Event> events = eventRepository.findAll(specification, pageable);
-        List<ShortResponseEventDto> eventDtoList;
+
 
         if (events == null) {
             eventDtoList = new ArrayList<>();
@@ -266,7 +262,9 @@ public class EventServiceImpl implements EventService {
                             UserMapper.toShortResponseUserDto(event.getInitiator())))
                     .collect(Collectors.toList());
         }
-        log.info("Сформирован список событий в соответствии с поставленным запросом.");
+        log.info("Сформирован список событий в соответствии с поставленным запросом в количестве {}.",
+                eventDtoList.size());
+        saveHitStatistic(requestData);
         return eventDtoList;
     }
 
@@ -295,8 +293,8 @@ public class EventServiceImpl implements EventService {
     @Override
     public ResponseEventDto adminUpdate(Long id, UpdateRequestEventDto eventDto) {
         Event initialEvent = getEventById(id);
+        isStatePending(initialEvent.getState());
         adminUpdateInitialEvent(initialEvent, eventDto);
-
         Event event = eventRepository.save(initialEvent);
         log.info("Данные события обновлены в БД: {}.", event);
 
@@ -317,11 +315,11 @@ public class EventServiceImpl implements EventService {
         Integer confirmedRequests = event.getConfirmedRequests();
         isInitiatorUser(event.getInitiator().getId(), userId);
         isNotExceededLimitRequests(eventsParticipantLimit, confirmedRequests);
-        isEventRequireConfirmation(eventsParticipantLimit, event.getRequestModeration());
+        isEventRequireConfirmation(eventsParticipantLimit, event.isRequestModeration());
         RequestStatus requestStatus = initialRequestListDto.getStatus();
 
-        List<Request> requests = requestRepository.findAllByIdInAndStatusPendingOrderByCreatedAsc(
-                initialRequestListDto.getRequestIds());
+        List<Request> requests = requestRepository.findAllByIdInAndStatusOrderByCreatedAsc(
+        initialRequestListDto.getRequestIds(), RequestStatus.PENDING);
         List<ResponseRequestDto> confirmedRequestsList = new ArrayList<>();
         List<ResponseRequestDto> rejectedRequestsList = new ArrayList<>();
 
@@ -329,10 +327,10 @@ public class EventServiceImpl implements EventService {
             case CONFIRMED:
                 for (Request request : requests) {
                     if (confirmedRequests < eventsParticipantLimit) {
-                        updateConfirmedRequestsStatus(request, userId, confirmedRequestsList);
+                        updateConfirmedRequestsStatus(request, confirmedRequestsList);
                         confirmedRequests = confirmedRequests + 1;
                     } else {
-                        updateRejectedRequestsStatus(request, userId, rejectedRequestsList);
+                        updateRejectedRequestsStatus(request, rejectedRequestsList);
                     }
                 }
                 event.setConfirmedRequests(confirmedRequests);
@@ -341,18 +339,20 @@ public class EventServiceImpl implements EventService {
 
             case REJECTED:
                 for (Request request : requests) {
-                    updateRejectedRequestsStatus(request, userId, rejectedRequestsList);
+                    updateRejectedRequestsStatus(request, rejectedRequestsList);
                 }
                 break;
 
             default:
                 throw new ValidationException(String.format("Unknown requestStatus: %s", requestStatus));
         }
-        log.info("Статусы запросов пользователей на участие в событии обновлены.");
-        return ResultRequestListDto.builder()
+
+        ResultRequestListDto resultRequestListDto = ResultRequestListDto.builder()
                 .confirmedRequests(confirmedRequestsList)
                 .rejectedRequests(rejectedRequestsList)
                 .build();
+        log.info("Статусы запросов пользователей на участие в событии обновлены: {}.", resultRequestListDto);
+        return resultRequestListDto;
     }
 
     @Override
@@ -372,15 +372,13 @@ public class EventServiceImpl implements EventService {
         return requestDtoList;
     }
 
-    private void updateConfirmedRequestsStatus(Request request, Long userId,
-                                               List<ResponseRequestDto> confirmedRequestsList) {
+    private void updateConfirmedRequestsStatus(Request request, List<ResponseRequestDto> confirmedRequestsList) {
         request.setStatus(RequestStatus.CONFIRMED);
         requestRepository.save(request);
         confirmedRequestsList.add(RequestMapper.toResponseRequestDto(request));
     }
 
-    private void updateRejectedRequestsStatus(Request request, Long userId,
-                                              List<ResponseRequestDto> rejectedRequestsList) {
+    private void updateRejectedRequestsStatus(Request request, List<ResponseRequestDto> rejectedRequestsList) {
         request.setStatus(RequestStatus.REJECTED);
         requestRepository.save(request);
         rejectedRequestsList.add(RequestMapper.toResponseRequestDto(request));
@@ -407,16 +405,29 @@ public class EventServiceImpl implements EventService {
         }
     }
 
+    private void isStatePublished(EventState state) {
+        if (!state.equals(EventState.PUBLISHED)) {
+            throw new NotFoundException("Запрашиваемое событие не имеет статус PUBLISHED и не является общедоступным. " +
+                    "Выполнить операцию невозможно!");
+        }
+    }
+
     private void isStateNotPublished(EventState state) {
         if (state.equals(EventState.PUBLISHED)) {
             throw new DataConflictException("Событие имеет статус PUBLISHED. Выполнить операцию невозможно!");
         }
     }
 
+    private void isStatePending(EventState state) {
+        if (!state.equals(EventState.PENDING)) {
+            throw new DataConflictException("Событие не имеет статус PENDING. Выполнить операцию невозможно!");
+        }
+    }
+
     private void isEventRequireConfirmation(Integer participantLimit, boolean requestModeration) {
         if ((participantLimit == 0) || (!requestModeration)) {
             throw new DataConflictException("Заявкам пользователей на участие в событии не требуется подтверждение, " +
-                    "т.к. на данное событие заявки подтверждаются уже при их создании. Выполнить операцию невозможно!");
+                    "т.к. на данное событие заявки подтверждаются ещё при их создании. Выполнить операцию невозможно!");
         }
     }
 
@@ -429,7 +440,7 @@ public class EventServiceImpl implements EventService {
 
     private void isStartBeforeEnd(LocalDateTime rangeStart, LocalDateTime rangeEnd) {
         if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
-            throw new DataConflictException("Некорректно задан временной интервал, в котором " +
+            throw new ValidationException("Некорректно задан временной интервал, в котором " +
                     "будет производиться поиск событий. Выполнить операцию невозможно!");
         }
     }
@@ -443,17 +454,17 @@ public class EventServiceImpl implements EventService {
         }
 
         String title = eventDto.getTitle();
-        if (title != null) {
+        if (title != null && !title.isBlank()) {
             initialEvent.setTitle(title);
         }
 
         String annotation = eventDto.getAnnotation();
-        if (!annotation.isBlank()) {
+        if (annotation!= null && !annotation.isBlank()) {
             initialEvent.setAnnotation(annotation);
         }
 
         String description = eventDto.getDescription();
-        if (description != null) {
+        if (description != null && !description.isBlank()) {
             initialEvent.setDescription(description);
         }
 
@@ -470,7 +481,7 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        Long categoryId = eventDto.getCategoryId();
+        Long categoryId = eventDto.getCategory();
         if (categoryId != null) {
             initialEvent.setCategory(getCategoryById(categoryId));
         }
@@ -499,6 +510,7 @@ public class EventServiceImpl implements EventService {
     }
 
     private void adminUpdateInitialEvent(Event initialEvent, UpdateRequestEventDto eventDto) {
+
         LocalDateTime eventDate = eventDto.getEventDate();
         if (eventDate != null) {
             isStartNotBeforeNHours(LocalDateTime.now(), eventDate, 1);
@@ -506,17 +518,17 @@ public class EventServiceImpl implements EventService {
         }
 
         String title = eventDto.getTitle();
-        if (title != null) {
+        if (title != null && !title.isBlank()) {
             initialEvent.setTitle(title);
         }
 
         String annotation = eventDto.getAnnotation();
-        if (!annotation.isBlank()) {
+        if (annotation != null && !annotation.isBlank()) {
             initialEvent.setAnnotation(annotation);
         }
 
         String description = eventDto.getDescription();
-        if (description != null) {
+        if (description != null && !description.isBlank()) {
             initialEvent.setDescription(description);
         }
 
@@ -534,14 +546,16 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        Long categoryId = eventDto.getCategoryId();
+        Long categoryId = eventDto.getCategory();
         if (categoryId != null) {
             initialEvent.setCategory(getCategoryById(categoryId));
         }
 
         RequestLocationDto locationDto = eventDto.getLocation();
         if (locationDto != null) {
-            initialEvent.setLocation(LocationMapper.toLocation(locationDto));
+            Location  locationData = LocationMapper.toLocation(locationDto);
+            Location  location = locationRepository.save(locationData);
+            initialEvent.setLocation(location);
         }
 
         Boolean paid = eventDto.getPaid();
@@ -563,12 +577,13 @@ public class EventServiceImpl implements EventService {
 
     private void saveHitStatistic(HttpServletRequest request) {
         String app = "main-service";
-        statClient.saveHit(EndpointHitDto.builder()
+        EndpointHitDto endpointHitDto = EndpointHitDto.builder()
                 .app(app)
                 .uri(request.getRequestURI())
                 .ip(request.getRemoteAddr())
-                .timestamp(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
-                .build());
+                .timestamp(LocalDateTime.now())
+                .build();
+        statClient.saveHit(endpointHitDto);
     }
 
     private void addViews(List<Event> events) {

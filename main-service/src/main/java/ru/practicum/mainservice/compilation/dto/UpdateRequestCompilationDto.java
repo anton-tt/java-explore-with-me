@@ -15,10 +15,10 @@ public class UpdateRequestCompilationDto {
 
     private List<Long> events;
 
-    private Boolean pinned;
+    private Boolean pinned = false;
 
-    @Size(min = 3, max = 120, message = "Количество символов в названии подборки должно быть в интервале " +
-            "от 3 до 120 символов.")
+    @Size(min = 3, max = 50, message = "Количество символов в названии подборки должно быть в интервале " +
+            "от 3 до 50 символов.")
     private String title;
 
 }

@@ -7,7 +7,7 @@ import lombok.Data;
 @Builder
 public class ResponseLocationDto {
 
-    private Long id;
+    //private Long id;
     private Double lat;
     private Double lon;
 

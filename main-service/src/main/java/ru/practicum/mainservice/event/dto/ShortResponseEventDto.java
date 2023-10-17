@@ -1,5 +1,6 @@
 package ru.practicum.mainservice.event.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Data;
 import ru.practicum.mainservice.category.dto.ResponseCategoryDto;
@@ -14,6 +15,7 @@ public class ShortResponseEventDto {
     private String annotation;
     private ResponseCategoryDto category;
     private Integer confirmedRequests;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
     private ShortResponseUserDto initiator;
     private Boolean paid;

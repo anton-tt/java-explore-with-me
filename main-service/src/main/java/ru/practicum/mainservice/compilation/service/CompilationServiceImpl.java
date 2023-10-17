@@ -38,8 +38,8 @@ public class CompilationServiceImpl implements CompilationService {
     private final UserRepository userRepository;
 
     private Compilation getCompilationById(long id) {
-        return compilationRepository.findById(id).orElseThrow(() -> new NotFoundException(String.format("Пользователь " +
-                "с id = %s отсутствует в БД. Выполнить операцию невозможно!", id)));
+        return compilationRepository.findById(id).orElseThrow(() -> new NotFoundException(String.format("Подборка " +
+                "событий с id = %s отсутствует в БД. Выполнить операцию невозможно!", id)));
     }
 
     private Category getCategoryById(long id) {
@@ -54,10 +54,11 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Override
     public ResponseCompilationDto create(RequestCompilationDto compilationDto) {
+        System.out.println("compilationDto " + compilationDto);
         if (compilationDto.getPinned() == null) {
             compilationDto.setPinned(false);
         }
-
+        System.out.println("compilationDto " + compilationDto);
         List<Event> events = new ArrayList<>();
         List<Long> eventIds = compilationDto.getEvents();
         List<ShortResponseEventDto> eventDtoList = new ArrayList<>();
@@ -65,13 +66,17 @@ public class CompilationServiceImpl implements CompilationService {
             events = eventRepository.findAllByIdIn(eventIds);
             eventDtoList = toEventDtoList(events);
         }
+
         Compilation compilationData = CompilationMapper.toCompilation(compilationDto, events);
+        System.out.println("compilationData " + compilationData);
         Compilation compilation = compilationRepository.save(compilationData);
+        System.out.println("compilation " + compilation);
         log.info("Данные новой подборки событий добавлены в БД: {}.", compilation);
 
         ResponseCompilationDto responseCompilationDto = CompilationMapper.toResponseCompilationDto(compilation,
                 eventDtoList);
         log.info("Новая подборка событий создана: {}.", responseCompilationDto);
+        System.out.println("responseCompilationDto " + responseCompilationDto);
         return responseCompilationDto;
     }
 
@@ -89,14 +94,15 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Override
     public List<ResponseCompilationDto> getCompilations(Boolean pinned, Integer from, Integer size) {
+        System.out.println("pinned, from, size " + pinned + from + size);
         Pageable pageable = PageRequest.of(from / size, size);
         List<Compilation> compilations;
-        if (pinned) {
+        if (pinned != null) {
             compilations = compilationRepository.findAllByPinned(true, pageable);
         } else {
             compilations = compilationRepository.findAll(pageable).getContent();
         }
-
+        System.out.println("compilations " + compilations);
         if (compilations.isEmpty()) {
             log.info("По заданным условиям подборки событий отсутствуют.");
             return new ArrayList<>();
@@ -114,6 +120,7 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Override
     public ResponseCompilationDto update(Long compId, UpdateRequestCompilationDto compilationDto) {
+        System.out.println("4");
         Compilation oldCompilation = getCompilationById(compId);
         Boolean compilationPinned = compilationDto.getPinned();
         if (compilationPinned != null) {
@@ -147,6 +154,7 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Override
     public void delete(Long compId) {
+        System.out.println("5");
         Compilation compilation = getCompilationById(compId);
         log.info("Подборка найдена в БД: {}.", compilation);
         compilationRepository.deleteById(compId);
