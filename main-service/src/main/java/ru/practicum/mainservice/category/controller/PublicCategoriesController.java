@@ -32,5 +32,4 @@ public class PublicCategoriesController {
         log.info("Поиск категорий по заданным параметрам");
         return categoryService.getAll(from, size);
     }
-
 }
