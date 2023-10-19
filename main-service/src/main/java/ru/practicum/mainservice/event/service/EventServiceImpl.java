@@ -590,5 +590,4 @@ public class EventServiceImpl implements EventService {
         events.forEach(event -> event.setViews(+1));
         eventRepository.saveAll(events);
     }
-
 }
