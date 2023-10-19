@@ -54,11 +54,9 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Override
     public ResponseCompilationDto create(RequestCompilationDto compilationDto) {
-        System.out.println("compilationDto " + compilationDto);
         if (compilationDto.getPinned() == null) {
             compilationDto.setPinned(false);
         }
-        System.out.println("compilationDto " + compilationDto);
         List<Event> events = new ArrayList<>();
         List<Long> eventIds = compilationDto.getEvents();
         List<ShortResponseEventDto> eventDtoList = new ArrayList<>();
@@ -68,22 +66,19 @@ public class CompilationServiceImpl implements CompilationService {
         }
 
         Compilation compilationData = CompilationMapper.toCompilation(compilationDto, events);
-        System.out.println("compilationData " + compilationData);
         Compilation compilation = compilationRepository.save(compilationData);
-        System.out.println("compilation " + compilation);
         log.info("Данные новой подборки событий добавлены в БД: {}.", compilation);
 
         ResponseCompilationDto responseCompilationDto = CompilationMapper.toResponseCompilationDto(compilation,
                 eventDtoList);
         log.info("Новая подборка событий создана: {}.", responseCompilationDto);
-        System.out.println("responseCompilationDto " + responseCompilationDto);
         return responseCompilationDto;
     }
 
     @Override
     public ResponseCompilationDto getById(Long compId) {
         Compilation compilation = getCompilationById(compId);
-        List<Event> events = compilation.getEvents();;
+        List<Event> events = compilation.getEvents();
         List<ShortResponseEventDto> eventDtoList = toEventDtoList(events);
         log.info("Подборка событий найдена в БД: {}.", compilation);
         ResponseCompilationDto responseCompilationDto = CompilationMapper.toResponseCompilationDto(compilation,
@@ -94,7 +89,6 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Override
     public List<ResponseCompilationDto> getCompilations(Boolean pinned, Integer from, Integer size) {
-        System.out.println("pinned, from, size " + pinned + from + size);
         Pageable pageable = PageRequest.of(from / size, size);
         List<Compilation> compilations;
         if (pinned != null) {
@@ -102,13 +96,12 @@ public class CompilationServiceImpl implements CompilationService {
         } else {
             compilations = compilationRepository.findAll(pageable).getContent();
         }
-        System.out.println("compilations " + compilations);
         if (compilations.isEmpty()) {
             log.info("По заданным условиям подборки событий отсутствуют.");
             return new ArrayList<>();
         } else {
             List<ResponseCompilationDto> resultList = compilations.stream()
-                    .map(compilation -> {
+                    .map((Compilation compilation) -> {
                         List<ShortResponseEventDto> eventDtoList = toEventDtoList(compilation.getEvents());
                         return CompilationMapper.toResponseCompilationDto(compilation, eventDtoList);
                     })
@@ -120,7 +113,6 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Override
     public ResponseCompilationDto update(Long compId, UpdateRequestCompilationDto compilationDto) {
-        System.out.println("4");
         Compilation oldCompilation = getCompilationById(compId);
         Boolean compilationPinned = compilationDto.getPinned();
         if (compilationPinned != null) {
@@ -154,7 +146,6 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Override
     public void delete(Long compId) {
-        System.out.println("5");
         Compilation compilation = getCompilationById(compId);
         log.info("Подборка найдена в БД: {}.", compilation);
         compilationRepository.deleteById(compId);
@@ -163,7 +154,7 @@ public class CompilationServiceImpl implements CompilationService {
 
     private List<ShortResponseEventDto> toEventDtoList(List<Event> events) {
         return events.stream()
-                .map(event -> {
+                .map((Event event) -> {
                     Category eventsCategory = getCategoryById(event.getCategory().getId());
                     User eventsInitiator = getUserById(event.getInitiator().getId());
                     return EventMapper.toShortResponseEventDto(event,

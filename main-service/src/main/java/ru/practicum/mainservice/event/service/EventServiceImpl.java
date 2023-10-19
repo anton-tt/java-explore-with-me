@@ -144,7 +144,7 @@ public class EventServiceImpl implements EventService {
         } else {
             addViews(eventsOneInitiator);
             eventDtoList = eventsOneInitiator.stream()
-                    .map(event -> EventMapper.toShortResponseEventDto(event,
+                    .map((Event event) -> EventMapper.toShortResponseEventDto(event,
                             CategoryMapper.toResponseCategoryDto(event.getCategory()),
                             UserMapper.toShortResponseUserDto(event.getInitiator())))
                     .collect(Collectors.toList());
@@ -193,7 +193,7 @@ public class EventServiceImpl implements EventService {
         } else {
             addViews(events);
             eventDtoList = events.stream()
-                    .map(event -> EventMapper.toResponseEventDto(event,
+                    .map((Event event) -> EventMapper.toResponseEventDto(event,
                             CategoryMapper.toResponseCategoryDto(event.getCategory()),
                             LocationMapper.toResponseLocationDto(event.getLocation()),
                             UserMapper.toShortResponseUserDto(event.getInitiator())))
@@ -257,7 +257,7 @@ public class EventServiceImpl implements EventService {
         } else {
             addViews(events);
             eventDtoList = events.stream()
-                    .map(event -> EventMapper.toShortResponseEventDto(event,
+                    .map((Event event) -> EventMapper.toShortResponseEventDto(event,
                             CategoryMapper.toResponseCategoryDto(event.getCategory()),
                             UserMapper.toShortResponseUserDto(event.getInitiator())))
                     .collect(Collectors.toList());

@@ -37,7 +37,7 @@ public class Event {
     private EventState state = EventState.PENDING;
 
     @Column(name = "is_paid")
-    private boolean paid = false;
+    private boolean paid;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")

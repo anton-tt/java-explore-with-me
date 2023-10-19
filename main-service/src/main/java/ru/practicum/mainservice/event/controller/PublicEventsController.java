@@ -10,6 +10,7 @@ import ru.practicum.mainservice.event.dto.ShortResponseEventDto;
 import ru.practicum.mainservice.event.service.EventService;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.Positive;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -23,7 +24,7 @@ public class PublicEventsController {
     private final EventService eventService;
 
     @GetMapping("/{eventId}")
-    public ResponseEventDto getById(@PathVariable Long eventId,
+    public ResponseEventDto getById(@PathVariable @Positive Long eventId,
                                     HttpServletRequest requestData) {
         log.info("");
         log.info("Получение данных события с id = {}", eventId);

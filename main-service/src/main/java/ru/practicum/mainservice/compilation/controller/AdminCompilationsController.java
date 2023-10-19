@@ -24,7 +24,7 @@ public class AdminCompilationsController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseCompilationDto createCompilation(@RequestBody @Valid RequestCompilationDto compilationDto) {
         log.info("");
-        log.info("Добавление новой побборки событий: {}", compilationDto);
+        log.info("Добавление новой подборки событий: {}", compilationDto);
         return compilationService.create(compilationDto);
     }
 

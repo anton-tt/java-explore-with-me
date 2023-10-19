@@ -14,6 +14,7 @@ import ru.practicum.mainservice.event.requestListDto.ResultRequestListDto;
 import ru.practicum.mainservice.event.service.EventService;
 import ru.practicum.mainservice.request.dto.ResponseRequestDto;
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
 import java.util.List;
 
 @RestController
@@ -27,7 +28,7 @@ public class PrivateEventsController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEventDto createEvent(@PathVariable Long userId,
+    public ResponseEventDto createEvent(@PathVariable @Positive Long userId,
                                         @RequestBody @Valid RequestEventDto eventDto) {
         log.info("");
         log.info("Добавление нового события: {}", eventDto);
@@ -35,15 +36,15 @@ public class PrivateEventsController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEventDto getByIdByInitiator(@PathVariable Long userId,
-                                               @PathVariable Long id) {
+    public ResponseEventDto getByIdByInitiator(@PathVariable @Positive Long userId,
+                                               @PathVariable @Positive Long id) {
         log.info("");
         log.info("Получение данных события с id = {}", id);
         return eventService.getByIdByInitiator(userId, id);
     }
 
     @GetMapping
-    public List<ShortResponseEventDto> getEventsOneInitiator(@PathVariable Long userId,
+    public List<ShortResponseEventDto> getEventsOneInitiator(@PathVariable @Positive Long userId,
                                                              @RequestParam(required = false, defaultValue = "0")
                                                                  Integer from,
                                                              @RequestParam(required = false, defaultValue = "10")
@@ -54,8 +55,8 @@ public class PrivateEventsController {
     }
 
     @PatchMapping("/{eventId}")
-    public ResponseEventDto privateUpdateEvent(@PathVariable Long userId,
-                                               @PathVariable Long eventId,
+    public ResponseEventDto privateUpdateEvent(@PathVariable @Positive Long userId,
+                                               @PathVariable @Positive Long eventId,
                                                @RequestBody @Valid UpdateRequestEventDto eventDto) {
         log.info("");
         log.info("Обновление данных события с id = {} в режиме private: {}", eventId, eventDto);
@@ -63,8 +64,8 @@ public class PrivateEventsController {
     }
 
     @PatchMapping("/{eventId}/requests")
-    public ResultRequestListDto updateRequestsStatus(@PathVariable Long userId,
-                                                     @PathVariable Long eventId,
+    public ResultRequestListDto updateRequestsStatus(@PathVariable @Positive Long userId,
+                                                     @PathVariable @Positive Long eventId,
                                                      @RequestBody InitialRequestListDto requestListDto) {
         log.info("");
         log.info("Обновление пользователем с id = {}, создавшим событие с id = {}, статусов запросов на участие в нём",
@@ -73,8 +74,8 @@ public class PrivateEventsController {
     }
 
     @GetMapping("/{eventId}/requests")
-    public List<ResponseRequestDto> getAllRequestOneEventFromInitiator(@PathVariable Long userId,
-                                                                       @PathVariable Long eventId) {
+    public List<ResponseRequestDto> getAllRequestOneEventFromInitiator(@PathVariable @Positive Long userId,
+                                                                       @PathVariable @Positive Long eventId) {
         log.info("");
         log.info("Получение всех запросов пользователей на участие в событии с id = {}, " +
                 "созданном инициатором с id = {}", eventId, userId);

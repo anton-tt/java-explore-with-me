@@ -29,7 +29,7 @@ public class PrivateRequestsController {
     }
 
     @GetMapping
-    public List<ResponseRequestDto> getRequestsOneRequester(@PathVariable Long userId,
+    public List<ResponseRequestDto> getRequestsOneRequester(@PathVariable @Positive Long userId,
                                                             @RequestParam(defaultValue = "0") Integer from,
                                                             @RequestParam(defaultValue = "10") Integer size) {
         log.info("");
@@ -38,8 +38,8 @@ public class PrivateRequestsController {
     }
 
     @PatchMapping("/{requestId}/cancel")
-    public ResponseRequestDto cancelRequest(@PathVariable Long userId,
-                                        @PathVariable Long requestId) {
+    public ResponseRequestDto cancelRequest(@PathVariable @Positive Long userId,
+                                            @PathVariable @Positive Long requestId) {
         log.info("");
         log.info("Отмена запроса, с id = {} на участие в событии, пользователем с id = {}", requestId, userId);
         return requestService.cancelRequest(userId, requestId);

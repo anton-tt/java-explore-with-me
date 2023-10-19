@@ -62,9 +62,7 @@ public class RequestServiceImpl implements RequestService {
         }
         LocalDateTime currentMoment = LocalDateTime.now();
         Request requestData = RequestMapper.toRequest(requester, event, currentMoment, requestStatus);
-        System.out.println("requestData " + requestData);
         Request request = requestRepository.save(requestData);
-        System.out.println("request " + request);
 
         if (requestStatus.equals(RequestStatus.CONFIRMED)) {
             int confirmedRequests = event.getConfirmedRequests() + 1;
@@ -74,14 +72,13 @@ public class RequestServiceImpl implements RequestService {
         log.info("Данные запроса на участие в событии добавлены в БД: {}.", request);
 
         ResponseRequestDto requestDto = RequestMapper.toResponseRequestDto(request);
-        System.out.println("requestDto " + requestDto);
         log.info("Запрос на участие в событии создан: {}.", requestDto);
         return requestDto;
     }
 
     @Override
     public List<ResponseRequestDto> getAllOneRequester(Long requesterId, Integer from, Integer size) {
-        User requester = getUserById(requesterId);
+        getUserById(requesterId);
         List<ResponseRequestDto> requestDtoList;
         Pageable pageable = PageRequest.of(from / size, size);
         List<Request> requestsOneRequester = requestRepository.findAllByRequesterId(requesterId, pageable);
