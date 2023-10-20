@@ -40,6 +40,10 @@ import ru.practicum.mainservice.user.dto.ShortResponseUserDto;
 import ru.practicum.mainservice.user.mapper.UserMapper;
 import ru.practicum.mainservice.user.model.User;
 import ru.practicum.mainservice.user.repository.UserRepository;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -160,27 +164,27 @@ public class EventServiceImpl implements EventService {
         isStartBeforeEnd(rangeStart, rangeEnd);
         Specification<Event> specification = Specification.where(null);
         if (users != null && !users.isEmpty()) {
-            specification = specification.and((root, query, criteriaBuilder) ->
+            specification = specification.and((Root<Event> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) ->
                     root.get("initiator").get("id").in(users));
         }
 
         if (states != null && !states.isEmpty()) {
-            specification = specification.and((root, query, criteriaBuilder) ->
+            specification = specification.and((Root<Event> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) ->
                     root.get("state").as(String.class).in(states));
         }
 
         if (categories != null && !categories.isEmpty()) {
-            specification = specification.and((root, query, criteriaBuilder) ->
+            specification = specification.and((Root<Event> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) ->
                     root.get("category").get("id").in(categories));
         }
 
         if (rangeStart != null) {
-            specification = specification.and((root, query, criteriaBuilder) ->
+            specification = specification.and((Root<Event> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) ->
                             criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"), rangeStart));
         }
 
         if (rangeEnd != null) {
-            specification = specification.and((root, query, criteriaBuilder) ->
+            specification = specification.and((Root<Event> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) ->
                     criteriaBuilder.lessThanOrEqualTo(root.get("eventDate"), rangeEnd));
         }
 
@@ -213,7 +217,7 @@ public class EventServiceImpl implements EventService {
         Specification<Event> specification = Specification.where(null);
 
         if (text != null) {
-            specification = specification.and((root, query, criteriaBuilder) ->
+            specification = specification.and((Root<Event> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) ->
                     criteriaBuilder.or(
                             criteriaBuilder.like(criteriaBuilder.lower(root.get("annotation")),
                                     "%" + text.toLowerCase() + "%"),
@@ -222,7 +226,7 @@ public class EventServiceImpl implements EventService {
                     ));
 
         if (categories != null && !categories.isEmpty()) {
-            specification = specification.and((root, query, criteriaBuilder) ->
+            specification = specification.and((Root<Event> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) ->
                     root.get("category").get("id").in(categories));
         }
 
@@ -230,27 +234,26 @@ public class EventServiceImpl implements EventService {
             rangeStart = LocalDateTime.now();
         }
         LocalDateTime finalRangeStart = rangeStart;
-        specification = specification.and((root, query, criteriaBuilder) ->
+        specification = specification.and((Root<Event> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) ->
                     criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"), finalRangeStart));
         }
 
         if (rangeEnd != null) {
-            specification = specification.and((root, query, criteriaBuilder) ->
+            specification = specification.and((Root<Event> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) ->
                     criteriaBuilder.lessThanOrEqualTo(root.get("eventDate"), rangeEnd));
         }
 
         if (onlyAvailable != null && onlyAvailable) {
-            specification = specification.and((root, query, criteriaBuilder) ->
+            specification = specification.and((Root<Event> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) ->
                     criteriaBuilder.greaterThanOrEqualTo(root.get("participantLimit"), 0));
         }
 
-        specification = specification.and((root, query, criteriaBuilder) ->
+        specification = specification.and((Root<Event> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) ->
                         criteriaBuilder.equal(root.get("state"), EventState.PUBLISHED));
 
         List<ShortResponseEventDto> eventDtoList;
         Pageable pageable = PageRequest.of(from / size, size);
         List<Event> events = eventRepository.findAll(specification, pageable);
-
 
         if (events == null) {
             eventDtoList = new ArrayList<>();
@@ -470,15 +473,7 @@ public class EventServiceImpl implements EventService {
 
         StateAction stateAction = eventDto.getStateAction();
         if (stateAction != null) {
-            switch (stateAction) {
-                case SEND_TO_REVIEW:
-                    initialEvent.setState(EventState.PENDING);
-                    break;
-                case CANCEL_REVIEW:
-                    initialEvent.setState(EventState.CANCELED);
-                    break;
-                default: throw new ValidationException(String.format("Unknown stateAction: %s", stateAction));
-            }
+            setStateEventPrivate(stateAction, initialEvent);
         }
 
         Long categoryId = eventDto.getCategory();
@@ -534,16 +529,7 @@ public class EventServiceImpl implements EventService {
 
         StateAction stateAction = eventDto.getStateAction();
         if (stateAction != null) {
-            switch (stateAction) {
-                case PUBLISH_EVENT:
-                    initialEvent.setState(EventState.PUBLISHED);
-                    initialEvent.setPublishedOn(LocalDateTime.now());
-                    break;
-                case REJECT_EVENT:
-                    initialEvent.setState(EventState.CANCELED);
-                    break;
-                default: throw new ValidationException(String.format("Unknown stateAction: %s", stateAction));
-            }
+            setStateEventAdmin(stateAction, initialEvent);
         }
 
         Long categoryId = eventDto.getCategory();
@@ -553,9 +539,7 @@ public class EventServiceImpl implements EventService {
 
         RequestLocationDto locationDto = eventDto.getLocation();
         if (locationDto != null) {
-            Location  locationData = LocationMapper.toLocation(locationDto);
-            Location  location = locationRepository.save(locationData);
-            initialEvent.setLocation(location);
+            setEventsLocationAdmin(locationDto, initialEvent);
         }
 
         Boolean paid = eventDto.getPaid();
@@ -573,6 +557,37 @@ public class EventServiceImpl implements EventService {
             initialEvent.setRequestModeration(requestModeration);
         }
 
+    }
+
+    private void setStateEventPrivate(StateAction stateAction, Event initialEvent) {
+        switch (stateAction) {
+            case SEND_TO_REVIEW:
+                initialEvent.setState(EventState.PENDING);
+                break;
+            case CANCEL_REVIEW:
+                initialEvent.setState(EventState.CANCELED);
+                break;
+            default: throw new ValidationException(String.format("Unknown stateAction: %s", stateAction));
+        }
+    }
+
+    private void setStateEventAdmin(StateAction stateAction, Event initialEvent) {
+        switch (stateAction) {
+            case PUBLISH_EVENT:
+                initialEvent.setState(EventState.PUBLISHED);
+                initialEvent.setPublishedOn(LocalDateTime.now());
+                break;
+            case REJECT_EVENT:
+                initialEvent.setState(EventState.CANCELED);
+                break;
+            default: throw new ValidationException(String.format("Unknown stateAction: %s", stateAction));
+        }
+    }
+
+    private void setEventsLocationAdmin(RequestLocationDto locationDto, Event initialEvent) {
+        Location  locationData = LocationMapper.toLocation(locationDto);
+        Location  location = locationRepository.save(locationData);
+        initialEvent.setLocation(location);
     }
 
     private void saveHitStatistic(HttpServletRequest request) {

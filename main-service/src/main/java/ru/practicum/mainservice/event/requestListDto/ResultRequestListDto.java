@@ -9,7 +9,7 @@ import java.util.List;
 @Builder
 public class ResultRequestListDto {
 
-    List<ResponseRequestDto> confirmedRequests;
-    List<ResponseRequestDto> rejectedRequests;
+    private List<ResponseRequestDto> confirmedRequests;
+    private List<ResponseRequestDto> rejectedRequests;
 
 }

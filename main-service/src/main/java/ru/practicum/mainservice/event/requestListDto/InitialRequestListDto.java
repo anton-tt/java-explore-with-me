@@ -7,7 +7,7 @@ import java.util.List;
 @Data
 public class InitialRequestListDto {
 
-    List<Long> requestIds;
-    RequestStatus status;
+    private List<Long> requestIds;
+    private RequestStatus status;
 
 }
