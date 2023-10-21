@@ -3,6 +3,7 @@ package ru.practicum.server.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.server.mapper.StatMapper;
@@ -10,6 +11,7 @@ import ru.practicum.server.model.EndpointHit;
 import ru.practicum.server.model.ViewStats;
 import ru.practicum.server.repository.StatRepository;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,8 +29,9 @@ public class StatServiceImpl implements StatService {
       statRepository.save(endpointHit);
    }
 
-   @Override
-   public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
+    @Transactional(readOnly = true)
+    @Override
+    public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
        List<ViewStats> viewStatsList;
        boolean isNotEmptyUris = !(uris == null || uris.isEmpty());
        if (unique && isNotEmptyUris) {
@@ -40,10 +43,17 @@ public class StatServiceImpl implements StatService {
        } else {
            viewStatsList = statRepository.getAll(start, end);
        }
-       return viewStatsList
-               .stream()
-               .map(StatMapper::toViewStatsDto)
-               .collect(Collectors.toList());
+
+        List<ViewStatsDto> viewStatsListDto;
+        if (viewStatsList == null) {
+            viewStatsListDto = new ArrayList<>();
+        } else {
+            viewStatsListDto = viewStatsList
+                    .stream()
+                    .map(StatMapper::toViewStatsDto)
+                    .collect(Collectors.toList());
+        }
+        return viewStatsListDto;
    }
 
 }

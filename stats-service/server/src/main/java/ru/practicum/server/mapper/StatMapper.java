@@ -5,8 +5,6 @@ import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.server.model.EndpointHit;
 import ru.practicum.server.model.ViewStats;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @UtilityClass
 public class StatMapper {
@@ -16,8 +14,7 @@ public class StatMapper {
                 .app(endpointHitDto.getApp())
                 .uri(endpointHitDto.getUri())
                 .ip(endpointHitDto.getIp())
-                .created(LocalDateTime.parse(endpointHitDto.getTimestamp(),
-                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+                .created(endpointHitDto.getTimestamp())
                 .build();
     }
 
