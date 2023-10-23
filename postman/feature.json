@@ -288,7 +288,7 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl}}/comments?eventId=1&from=0&size=100",
+							"raw": "{{baseUrl}}/comments?eventId=106&from=0&size=100",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -298,7 +298,7 @@
 							"query": [
 								{
 									"key": "eventId",
-									"value": "1"
+									"value": "106"
 								},
 								{
 									"key": "from",
@@ -476,7 +476,7 @@
 							"variable": [
 								{
 									"key": "userId",
-									"value": "1"
+									"value": "136"
 								},
 								{
 									"key": "commentId",
