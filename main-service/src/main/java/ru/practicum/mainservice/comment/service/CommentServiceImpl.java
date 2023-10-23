@@ -68,6 +68,7 @@ public class CommentServiceImpl implements CommentService {
         log.info("Новый комментарий создан: {}.", responseCommentDto);
         return responseCommentDto;
     }
+
     @Override
     public ResponseCommentDto updateCommentsStateByAdmin(Long commentId, Boolean isConfirm) {
         Comment initialComment = getCommentById(commentId);
