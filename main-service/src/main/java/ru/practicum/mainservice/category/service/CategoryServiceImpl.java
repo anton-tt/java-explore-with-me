@@ -85,4 +85,5 @@ public class CategoryServiceImpl implements CategoryService {
         categoryRepository.delete(category);
         log.info("Все данные категории удалены.");
     }
+
 }
