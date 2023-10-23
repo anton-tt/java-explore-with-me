@@ -264,7 +264,7 @@
 									"pm.expect(target[0]).to.have.property('publishedOn');\r",
 									"});\r",
 									"\r",
-									"pm.test(\"Количество комментариев должно равняться двум\", function () {\r",
+									"pm.test(\"Количество комментариев должно равняться одному\", function () {\r",
 									"    pm.expect(target.length, 'List length must be 1').to.eql(1);\r",
 									"});"
 								],
