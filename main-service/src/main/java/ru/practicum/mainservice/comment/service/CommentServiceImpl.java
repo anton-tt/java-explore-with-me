@@ -193,4 +193,5 @@ public class CommentServiceImpl implements CommentService {
             initialComment.setState(CommentState.REJECTED);
         }
     }
+
 }
